@@ -6,7 +6,7 @@ from random import *
 from Crypto.Util import \
     number  # See https://www.dlitz.net/software/pycrypto/api/current/toc-Crypto.Util.number-module.html
 import sys
-from flint import nmod
+from flint import nmod, fmpz
 from Crypto.Hash import SHA
 from Crypto.Hash import MD5
 
@@ -92,17 +92,17 @@ def rinv_helper(r, new_r, t=0, new_t=1):
 # Multiplicative inverse of a in Z_n*
 def inverse(a, n):
     if gcd(a, n) == 1:
-        return rinv_helper(n, a) % n
+        return fmpz(rinv_helper(n, a) % n)
     else:
         return "a is not invertible in Z/nZ"
 
 
 def generate_keys(bit_length=1024, e=65537):
-    p = number.getPrime(bit_length)
-    q = number.getPrime(bit_length)
+    p = fmpz(number.getPrime(bit_length))
+    q = fmpz(number.getPrime(bit_length))
     n = p * q
     # Carmichael's totient function, which is the same as Euler's in this case.
-    l = lcm(p - 1, q - 1)
+    l = fmpz(lcm(p - 1, q - 1))
     public_key = (n, e)
     d = inverse(e, l)
     private_key = (n, d)
@@ -111,7 +111,7 @@ def generate_keys(bit_length=1024, e=65537):
 
 def string2int(s):
     # return int.from_bytes(s.encode("utf-8"), byteorder = "big")
-    return number.bytes_to_long(s.encode("utf-8"))
+    return fmpz(number.bytes_to_long(s.encode("utf-8")))
 
 
 def int2string(n):
