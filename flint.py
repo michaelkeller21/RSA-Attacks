@@ -33,20 +33,17 @@ def rec_pow_mod_n(b, m, n):
         return mult(b, rec_pow_mod_n(b, m - 1, n), n)
 
 
-
-
 # bit-twiddling way to compute b^m (mod n). No recursion needed.
 # If you can optimize this further, do so!
 def bit_pow_mod_n(b, m, n):
-    acc = 1  # the accumulated product
-    z = b
+    acc = nmod(1, n)
+    z = nmod(b, n)
     while m:
         if m & 1:  # check the least significant bit
-            acc = nmod(acc, n) * z
-        z = nmod(z, n) * z
+            acc *= z
+        z *= z
         m >>= 1  # the bit shift
-    return acc
-
+    return fmpz(acc)
 
 # Python supports first-class functions:
 pow_mod_n = bit_pow_mod_n
