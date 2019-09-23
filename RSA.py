@@ -1,5 +1,6 @@
 # Functions
 
+
 from math import *
 import sys
 from time import time
