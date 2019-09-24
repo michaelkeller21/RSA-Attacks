@@ -8,9 +8,10 @@ from Crypto.Util import \
 import sys
 from Crypto.Hash import SHA
 from Crypto.Hash import MD5
+import numba
+from numba import jit
 
 sys.setrecursionlimit(16384)
-
 
 def add(a, b, n):
     return (a + b) % n
@@ -23,20 +24,67 @@ def mult(a, b, n):
 # Naïve recursive implementation of the square-and-multiply fast exponentiation.
 # returns bˆm (mod n)
 def rec_pow_mod_n(b, m, n):
-    if m == 0:
+    if not m:
         return 1
-    elif m % 2 == 0:
-        t = rec_pow_mod_n(b, m // 2, n)
-        return mult(t, t, n)
+    elif not (m % 2):
+        return rec_pow_mod_n(b, m // 2, n)**2 % n
     else:
-        return mult(b, rec_pow_mod_n(b, m - 1, n), n)
+        return b * rec_pow_mod_n(b, m - 1, n) % n
 
+def new(b, m, n):
+    b = b % n
+    result = 1
+    while(m):
+        if m & 1:
+            result = result * b % n
+            b = b * b % n
+            exp >>= 1
+        return result
+
+
+
+
+def rec_pow_helper(b, m):
+    if not m:
+        return 1
+
+    if m == 1:
+        return m
+
+    elif not (m % 2):
+        return rec_pow_mod_n(b*b % n, m // 2, n)
+
+    else:
+        return rec_pow_mod_n(b*b % n, (m - 1) // 2, n)
+
+#
+# def tail_rec(fun):
+#    def tail(fun):
+#       a = fun
+#       while callable(a):
+#          a = a()
+#       return a
+#    return (lambda x: tail(fun(x)))
+#
+# def rec_pow_odd(b, m):
+#
+#
+#
+#
+# def rec_pow_even(b, m):
+#     if !m:
+#         return 1
+#
+#     if m == 1:
+#         return m
+#
+#     if
 
 # bit-twiddling way to compute b^m (mod n). No recursion needed.
 # If you can optimize this further, do so!
 def bit_pow_mod_n(b, m, n):
     acc = 1  # the accumulated product
-    z = b
+    z = b % n
     while m:
         if m & 1:  # check the least significant bit
             acc = (acc * z) % n
@@ -46,7 +94,7 @@ def bit_pow_mod_n(b, m, n):
 
 
 # Python supports first-class functions:
-pow_mod_n = bit_pow_mod_n
+pow_mod_n = rec_pow_mod_n
 
 
 def lcm(a, b):
@@ -74,24 +122,27 @@ def rsa_decrypt(c, private_key):
 #    if r > 1:
 #        return -1 # a is not invertible in Z/nZ
 #    else:
-#        return t % n
+#	     return t % n
 
 
 # My rewrite
-def rinv_helper(r, new_r, t=0, new_t=1):
-    if new_r > 0:
-        quotient = r // new_r
-        return rinv_helper(new_r, r % new_r, new_t, t - (r // new_r) * new_t)
+def rinv_helper(r, new_r, n, t=0, new_t=1):
+    if new_r <= 0:
+        return t % n
     else:
-        return t
-
+        quotient = r // new_r
+        return rinv_helper(new_r, r % new_r, n, new_t, t - (r // new_r) * new_t)
 
 # Multiplicative inverse of a in Z_n*
 def inverse(a, n):
     if gcd(a, n) == 1:
-        return rinv_helper(n, a) % n
+        return rinv_helper(n, a, n)
     else:
         return "a is not invertible in Z/nZ"
+
+
+
+
 
 
 def generate_keys(bit_length=1024, e=65537):
