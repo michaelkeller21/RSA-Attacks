@@ -1,18 +1,20 @@
-# Functions
 from Crypto.Util import \
     number  # See https://www.dlitz.net/software/pycrypto/api/current/toc-Crypto.Util.number-module.html
-from math import gcd
-import sys
-from time import time
-from powmodn import rec_pow_mod_n, bit_pow_mod_n, mon_pow_mod_n
 from util import lcm, Zn_to_ZpxZq, ZpxZq_to_Zn, flip_random_bit
-from inverse import inverse, rinv_helper
 from random import randint
 
+# inverse algorithms
+from inverse import rec_inverse
+
+
 class RSA:
-    def __init__(self, powmodn=bit_pow_mod_n, sign=False):
+    def __init__(self, powmodn=0, sign=False):
         print("RSA scheme using {} algorithm".format(powmodn.__name__))
-        self.powmodn = powmodn
+
+        if powmodn:
+            self.powmodn = powmodn
+        else:
+            raise ValueError('No powmodn algorithm was specified.')
 
         if sign:
             self.rsa_verify = self.rsa_encrypt
@@ -34,7 +36,7 @@ class RSA:
         # Carmichael's totient function, which is the same as Euler's in this case.
         l = lcm(p - 1, q - 1)
         public_key = (n, e)
-        d = inverse(e, l)
+        d = rec_inverse(e, l)
         private_key = (n, d)
         return (p, q, n, l, e, d, public_key, private_key)
 

@@ -1,6 +1,6 @@
 from math import gcd
 from Crypto.Util import number
-from inverse import inverse, rinv_helper
+from inverse import rec_inverse
 from random import randrange
 
 def lcm(a, b):
@@ -25,8 +25,8 @@ def Zn_to_ZpxZq(a, p, q):
 
 # Map an element (a, b) of Z_p* x Z_q* to Z_n*
 def ZpxZq_to_Zn(a, p, b, q, n):
-    s = inverse(p, q)
-    t = inverse(q, p)
+    s = rec_inverse(p, q)
+    t = rec_inverse(q, p)
 
     # s is the inverse of p in Z_q*. It means sp = 1 (mod q).
     # Obviously sp = 0 (mod p). So sp in Z_n* maps to (0, 1) in Z_p* x Z_q*.

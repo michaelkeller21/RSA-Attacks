@@ -1,8 +1,12 @@
 from RSA import RSA
-from powmodn import rec_pow_mod_n, bit_pow_mod_n, mon_pow_mod_n
 from util import int2string, string2int
 from rt import rt, rt2, rt3, rt4, rt_average
 from math import gcd
+
+# powmodn algs
+from powmodn import rec_pow_mod_n, rec_pow_mod_n1, bit_pow_mod_n, mon_pow_mod_n
+from tail_optimized import tail_rec_pow_mod_n
+
 
 def test_RSA(message="The quick brown fox jumps over the lazy dog.",
              bit_length=2048, e=65537, powmodn=bit_pow_mod_n):
@@ -144,12 +148,18 @@ def create_decrypt_running_time_table(message, e, start, stop, step, trials, pow
 def prompt_for_powmodn():
     val = int(input("\nSpecify Exponentiation Algorithm:\n\
                  1 Recursive\n\
-                 2 Montgomery\n\
-                 3 Bit\n\ninput: "))
+                 2 Recursive (other)           <-  failing\n\
+                 3 Recursive (tail-optimized)  <-  failing\n\
+                 4 Montgomery\n\
+                 5 Bit\n\ninput: "))
 
     if val==1:
         alg=rec_pow_mod_n
     elif val==2:
+        alg=rec_pow_mod_n1
+    elif val==3:
+        alg=tail_rec_pow_mod_n
+    elif val==4:
         alg=mon_pow_mod_n
     else: alg=bit_pow_mod_n
 
