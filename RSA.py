@@ -10,9 +10,9 @@ from inverse import inverse, rinv_helper
 from random import randint
 
 class RSA:
-
-    def __init__(self, func=bit_pow_mod_n, sign=False):
-        self.powmodn = func
+    def __init__(self, powmodn=bit_pow_mod_n, sign=False):
+        print("RSA scheme using {} algorithm".format(powmodn.__name__))
+        self.powmodn = powmodn
 
         if sign:
             self.rsa_verify = self.rsa_encrypt
@@ -21,7 +21,6 @@ class RSA:
     def rsa_encrypt(self, m, public_key):
         n, e = public_key
         return self.powmodn(m, e, n)
-
 
     # It's "isomorphic" to the encrypt function! Maybe just reuse the encrypt function.
     def rsa_decrypt(self, c, private_key):
@@ -60,7 +59,6 @@ class RSA:
                 x = flip_random_bit(x)
 
         return ZpxZq_to_Zn(w, p, x, q, n)
-
 
     def CRT_rsa_decrypt(self, c, private_key, p, q, faulty=False):
         n, d = private_key

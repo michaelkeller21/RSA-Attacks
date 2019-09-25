@@ -10,6 +10,7 @@ def rec_pow_mod_n(b, m, n):
     else:
         return b * rec_pow_mod_n(b, m - 1, n) % n
 
+
 # Currently failing implementation of tail recursion optimized rec_pow_mod_n
 def rec_pow_mod_n1(b, m):
     if not m:
@@ -37,7 +38,9 @@ def bit_pow_mod_n(b, m, n):
         m >>= 1  # the bit shift
     return acc
 
+
 # Uses montgomery reduction to perform bitwise powmodn without needing modulus divide
+# NOT OUR CODE: https://rosettacode.org/wiki/Montgomery_reduction
 def mon_pow_mod_n(b, m, n):
         mont = Montgomery(n)
         t1 = b * mont.rrm

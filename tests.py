@@ -1,34 +1,35 @@
 from RSA import RSA
+from powmodn import rec_pow_mod_n, bit_pow_mod_n, mon_pow_mod_n
 from util import int2string, string2int
 from rt import rt, rt2, rt3, rt4, rt_average
 from math import gcd
 
 def test_RSA(message="The quick brown fox jumps over the lazy dog.",
-             bit_length=2048, e=65537):
+             bit_length=2048, e=65537, powmodn=bit_pow_mod_n):
     # Generate a pair of primes
     # Use PyCrypt's library for generating primes for now. If we need to make
     # a home-brew version of these, we will, later...
     print("Generating ", bit_length, "-bit primes...")
 
-    qq = RSA()
-    (p, q, n, l, e, d, public_key, private_key) = qq.generate_keys(bit_length, e)
+    scheme = RSA(powmodn=powmodn)
+    (p, q, n, l, e, d, public_key, private_key) = scheme.generate_keys(bit_length, e)
 
     print("\nOriginal plaintext message: ", message)
 
     m = string2int(message)
     print("\nEncrypting message...")
-    c = qq.rsa_encrypt(m, public_key)
+    c = scheme.rsa_encrypt(m, public_key)
     ciphertext = int2string(c)
     print("  Ciphertext: ", ciphertext)
 
     print("\nDecrypting message...")
-    [m2, running_time] = rt2(qq.rsa_decrypt, c, private_key)
+    [m2, running_time] = rt2(scheme.rsa_decrypt, c, private_key)
     message2 = int2string(m2)
     print("  Message decrypted by rsa_decrypt: ", message2)
     print("  Running time for rsa_decrypt: ", running_time)
 
     print("\nDecrypting message using Chinese Remainder Theorem...")
-    [m3, running_time] = rt4(qq.CRT_rsa_decrypt, c, private_key, p, q)
+    [m3, running_time] = rt4(scheme.CRT_rsa_decrypt, c, private_key, p, q)
     message3 = int2string(m3)
     print("  Message decrypted by CRT_rsa_decrypt: ", message3)
     print("  Running time for CRT_rsa_decrypt: ", running_time)
@@ -43,12 +44,12 @@ def test_RSA_sign(bit_length=1024, e=65537):
     # CRT_rsa_sign = CRT_rsa_decrypt
     # rsa_verify = rsa_encrypt
 
-    qq = RSA(sign=True)
+    scheme = RSA(sign=True)
 
     print("\n\n-------------------------------------------------------------")
     print("\nThe random fault attack:")
     print("Generating", bit_length, "-bit keys...")
-    (p, q, n, l, e, d, public_key, private_key) = qq.generate_keys(bit_length, e)
+    (p, q, n, l, e, d, public_key, private_key) = scheme.generate_keys(bit_length, e)
 
     message = "Please attach your signature."
     print("\nAlice asks Bob to sign this message:\n\n\t", message)
@@ -56,11 +57,11 @@ def test_RSA_sign(bit_length=1024, e=65537):
     print("\nIn numeric form, this message is m =", m)
 
     print("\nNormally, Bob signs the message with his private key. The signature is ")
-    s = qq.rsa_sign(m, private_key, p, q)
+    s = scheme.rsa_sign(m, private_key, p, q)
     print("\ns =", s)
 
     print("\nAlice can verify this signature using the public key:")
-    print("\nrsa_verify(s, public_key) = ", qq.rsa_verify(s, public_key))
+    print("\nrsa_verify(s, public_key) = ", scheme.rsa_verify(s, public_key))
 
     print("\nIt is the same as the original message m.")
 
@@ -97,11 +98,11 @@ def test_RSA_sign(bit_length=1024, e=65537):
     print("bit error at a random position in either x or w:")
     print("\n\ts1 = CRT_rsa_sign(m, private_key, p, q, faulty = True)")
 
-    s1 = qq.rsa_sign(m, private_key, p, q, faulty=True)  # random bit flip
+    s1 = scheme.rsa_sign(m, private_key, p, q, faulty=True)  # random bit flip
 
     print("\nThe corrupted signature: s' =", s1)
 
-    m1 = qq.rsa_verify(s1, public_key)
+    m1 = scheme.rsa_verify(s1, public_key)
 
     print("\nAlice doesn't get the original message back when she verifies s':")
     print("\nm' = verify(s', public_key) =", m1)
@@ -116,9 +117,9 @@ def test_RSA_sign(bit_length=1024, e=65537):
     print("\np =", p)
     print("\nq =", q)
 
-def create_decrypt_running_time_table(message, e, start, stop, step, trials):
+def create_decrypt_running_time_table(message, e, start, stop, step, trials, powmodn=bit_pow_mod_n):
 
-    qq = RSA()
+    scheme = RSA(powmodn=powmodn)
 
     m = string2int(message)
 
@@ -128,13 +129,28 @@ def create_decrypt_running_time_table(message, e, start, stop, step, trials):
         sum_rt = sum_rt_crt = 0
 
         for i in range(trials):
-            (p, q, n, l, e, d, public_key, private_key) = qq.generate_keys(bit_length, e)
-            c = qq.rsa_encrypt(m, public_key)
+            (p, q, n, l, e, d, public_key, private_key) = scheme.generate_keys(bit_length, e)
+            c = scheme.rsa_encrypt(m, public_key)
 
             # Accumulate naïve recursive running times across trials
-            sum_rt += rt2(qq.rsa_decrypt, m, private_key)[1]
+            sum_rt += rt2(scheme.rsa_decrypt, m, private_key)[1]
 
             # ditto for CRT
-            sum_rt_crt += rt4(qq.CRT_rsa_decrypt, c, private_key, p, q)[1]
+            sum_rt_crt += rt4(scheme.CRT_rsa_decrypt, c, private_key, p, q)[1]
 
         print(bit_length, sum_rt / trials, sum_rt_crt / trials, sep=',')
+
+
+def prompt_for_powmodn():
+    val = int(input("\nSpecify Exponentiation Algorithm:\n\
+                 1 Recursive\n\
+                 2 Montgomery\n\
+                 3 Bit\n\ninput: "))
+
+    if val==1:
+        alg=rec_pow_mod_n
+    elif val==2:
+        alg=mon_pow_mod_n
+    else: alg=bit_pow_mod_n
+
+    return alg
