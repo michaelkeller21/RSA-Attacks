@@ -11,18 +11,6 @@ def rec_pow_mod_n(b, m, n):
         return b * rec_pow_mod_n(b, m - 1, n) % n
 
 
-# Currently failing implementation of tail recursion optimized rec_pow_mod_n
-def rec_pow_mod_n1(b, m, n):
-    if not m:
-        return 1
-    if m == 1:
-        return m
-    elif not (m % 2):
-        return rec_pow_mod_n(b*b % n, m // 2, n)
-    else:
-        return rec_pow_mod_n(b*b % n, (m - 1) // 2, n)
-
-
 # bit-twiddling way to compute b^m (mod n). No recursion needed.
 # If you can optimize this further, do so!
 def bit_pow_mod_n(b, m, n):

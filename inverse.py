@@ -5,7 +5,6 @@ def rec_inverse_helper(r, new_r, n, t=0, new_t=1):
     if new_r <= 0:
         return t % n
     else:
-        quotient = r // new_r
         return rec_inverse_helper(new_r, r % new_r, n, new_t, t - (r // new_r) * new_t)
 
 # Multiplicative inverse of a in Z_n*

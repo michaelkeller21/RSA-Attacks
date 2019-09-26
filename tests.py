@@ -4,18 +4,18 @@ from rt import rt, rt2, rt3, rt4, rt_average
 from math import gcd
 
 # powmodn algs
-from powmodn import rec_pow_mod_n, rec_pow_mod_n1, bit_pow_mod_n, mon_pow_mod_n
+from powmodn import rec_pow_mod_n, bit_pow_mod_n, mon_pow_mod_n
 from tail_optimized import tail_rec_pow_mod_n
 
 
-def test_RSA(message="The quick brown fox jumps over the lazy dog.",
+def test_RSA(inverse, message="The quick brown fox jumps over the lazy dog.",
              bit_length=2048, e=65537, powmodn=bit_pow_mod_n):
     # Generate a pair of primes
     # Use PyCrypt's library for generating primes for now. If we need to make
     # a home-brew version of these, we will, later...
     print("Generating ", bit_length, "-bit primes...")
 
-    scheme = RSA(powmodn=powmodn)
+    scheme = RSA(powmodn=powmodn, inverse=inverse)
     (p, q, n, l, e, d, public_key, private_key) = scheme.generate_keys(bit_length, e)
 
     print("\nOriginal plaintext message: ", message)
@@ -121,9 +121,9 @@ def test_RSA_sign(bit_length=1024, e=65537):
     print("\np =", p)
     print("\nq =", q)
 
-def create_decrypt_running_time_table(message, e, start, stop, step, trials, powmodn=bit_pow_mod_n):
+def create_decrypt_running_time_table(message, e, start, stop, step, trials, inverse, powmodn=bit_pow_mod_n):
 
-    scheme = RSA(powmodn=powmodn)
+    scheme = RSA(powmodn=powmodn, inverse=inverse)
 
     m = string2int(message)
 
@@ -148,19 +148,53 @@ def create_decrypt_running_time_table(message, e, start, stop, step, trials, pow
 def prompt_for_powmodn():
     val = int(input("\nSpecify Exponentiation Algorithm:\n\
                  1 Recursive\n\
-                 2 Recursive (other)           <-  failing\n\
-                 3 Recursive (tail-optimized)  <-  failing\n\
-                 4 Montgomery\n\
-                 5 Bit\n\ninput: "))
+                 2 Recursive (tail-optimized)  <-  failing\n\
+                 3 Montgomery\n\
+                 4 Bit\n\ninput: "))
 
     if val==1:
         alg=rec_pow_mod_n
     elif val==2:
-        alg=rec_pow_mod_n1
-    elif val==3:
         alg=tail_rec_pow_mod_n
-    elif val==4:
+    elif val==3:
         alg=mon_pow_mod_n
     else: alg=bit_pow_mod_n
 
     return alg
+
+
+# test driver for two pow mod n functions
+# currently fails everything lol
+def test_pow_mod_n(tests, func1, func2):
+    errors = 0
+
+    for test in tests:
+        b, m, n = test
+        print("b: {}, m: {}, n: {}".format(b, m, n))
+
+        try:
+            assert(func1(b,m,n) is func2(b,m,n))
+
+        except AssertionError:
+            print("Fail")
+            errors += 1
+
+        else:
+            print("Pass")
+
+    print("{} cases did not pass".format(errors))
+
+# testing
+if __name__ == "__main__":
+    from numpy.random import randint
+
+    cases = 10
+    max_int = 2**63
+
+    print("\n\nTesting recursive algorithm with tail optimized algorithm")
+    tests = randint(max_int, size=(cases, 3)).tolist()
+    test_pow_mod_n(tests, rec_pow_mod_n, tail_rec_pow_mod_n)
+
+    print("\n\nTesting recursive algorithm with bitwise algorithm")
+    tests = randint(max_int, size=(cases, 3)).tolist()
+    test_pow_mod_n(tests, rec_pow_mod_n, bit_pow_mod_n)
