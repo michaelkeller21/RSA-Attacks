@@ -33,3 +33,16 @@ def rt3(f, a, b, c):
 def rt4(f, a, b, c, d):
     starttime = time()
     return ([f(a, b, c, d), time() - starttime])
+
+# Computes average run time of f(n) over m trials.
+def rt_average_2(f, a, b, m):
+    rt_total = 0
+    for i in range(m):
+        rt_total += rt2(f, a, b)[1]
+    return rt_total / m
+
+def rt_average_4(f, a, b, c, d, m):
+    rt_total = 0
+    for i in range(m):
+        rt_total += rt4(f, a, b, c, d)[1]
+    return rt_total / m
