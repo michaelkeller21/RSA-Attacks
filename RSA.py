@@ -1,22 +1,27 @@
 from Crypto.Util import \
     number  # See https://www.dlitz.net/software/pycrypto/api/current/toc-Crypto.Util.number-module.html
-from util import lcm, flip_random_bit
+from util import lcm, flip_random_bit, int2string, string2int
 from random import randint
-
 # inverse algorithms
 from inverse import rec_inverse
 from tail_optimized import tail_rec_inverse
 
 class RSA:
-    def __init__(self, powmodn=0, inverse=rec_inverse, sign=False):
-        print("RSA scheme using {} and {} algorithms".format(powmodn.__name__, inverse.__name__))
+    def __init__(self, powmodn=0, inverse=rec_inverse, sign=False, gmp=False):
 
         self.powmodn = powmodn
         self.inverse = inverse
+        self.gmp = gmp
+
+        if self.gmp:
+            from gmpy2 import powmod
+            self.powmodn = powmod
 
         if sign:
             self.rsa_verify = self.rsa_encrypt
             self.rsa_sign = self.CRT_rsa_decrypt
+
+        print("RSA scheme using {} and {} algorithms".format(self.powmodn.__name__, inverse.__name__))
 
     def rsa_encrypt(self, m, public_key):
         n, e = public_key
@@ -28,15 +33,25 @@ class RSA:
         return self.powmodn(c, d, n)
 
     def generate_keys(self, bit_length=1024, e=65537):
+
         p = number.getPrime(bit_length)
         q = number.getPrime(bit_length)
         n = p * q
         # Carmichael's totient function, which is the same as Euler's in this case.
         l = lcm(p - 1, q - 1)
-        public_key = (n, e)
         d = self.inverse(e, l)
-        private_key = (n, d)
-        return (p, q, n, l, e, d, public_key, private_key)
+
+        if self.gmp:
+            from gmpy2 import mpz
+            public_key = (mpz(n), mpz(e))
+            private_key = (mpz(n), mpz(d))
+            return (mpz(p), mpz(q), mpz(n), mpz(l), mpz(e), mpz(d), public_key, private_key)
+
+        else:
+            public_key = (n, e)
+            private_key = (n, d)
+            return (p, q, n, l, e, d, public_key, private_key)
+
 
     def encrypt(self, plaintext_string, public_key):
         return int2string(rsa_encrypt(string2int(plaintext_string), public_key))

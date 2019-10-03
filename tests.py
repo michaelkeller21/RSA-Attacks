@@ -9,13 +9,11 @@ from tail_optimized import tail_rec_pow_mod_n
 
 
 def test_RSA(inverse, message="The quick brown fox jumps over the lazy dog.",
-             bit_length=2048, e=65537, powmodn=bit_pow_mod_n):
-    # Generate a pair of primes
-    # Use PyCrypt's library for generating primes for now. If we need to make
-    # a home-brew version of these, we will, later...
+             bit_length=4096, e=65537, powmodn=bit_pow_mod_n):
+
     print("Generating ", bit_length, "-bit primes...")
 
-    scheme = RSA(powmodn=powmodn, inverse=inverse)
+    scheme = RSA(powmodn=powmodn, inverse=inverse, gmp=True)
     (p, q, n, l, e, d, public_key, private_key) = scheme.generate_keys(bit_length, e)
 
     print("\nOriginal plaintext message: ", message)
